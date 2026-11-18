@@ -1,0 +1,6 @@
+import t from"node:test";import a from"node:assert";import{suggestIntent,slaDue,slaState,pickAgent,detectThemes}from"../lib/domain.js";
+t("intent suggestion",()=>{a.equal(suggestIntent("Refund not received"),"refund");a.equal(suggestIntent("hello"),"general")});
+t("themes",()=>a.deepEqual(detectThemes("refund delay and sync error").sort(),["bug signal","inventory sync","refund delay"]));
+t("SLA tightens near check-in",()=>{const n=Date.now(),H=36e5;a.equal((slaDue("P3",n,n+10*H)-n)/H,2);a.equal((slaDue("P3",n,n+48*H)-n)/H,6);a.equal((slaDue("P3",n,null)-n)/H,24)});
+t("SLA states",()=>{const n=Date.now(),H=36e5,c=new Date(n-10*H).toISOString();a.equal(slaState(new Date(n+H*30).toISOString(),c,"Open"),"ok");a.equal(slaState(new Date(n+H).toISOString(),c,"Open"),"risk");a.equal(slaState(new Date(n-H).toISOString(),c,"Open"),"breached");a.equal(slaState(new Date(n-H).toISOString(),c,"Resolved"),"met")});
+t("routing prefers region, skips unavailable",()=>{const ag=[{id:"x",region:"India",available:false,load:0},{id:"y",region:"UAE",available:true,load:1},{id:"z",region:"India",available:true,load:2}];a.equal(pickAgent(ag,{region:"India",priority:"P3"}).id,"z");a.equal(pickAgent([],{region:"India",priority:"P1"}),null)});
